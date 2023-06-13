@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb"
+	"github.com/makaires77/iapf/backend/graph_pasteur/graphdb"
 )
 
 type Scraper struct {

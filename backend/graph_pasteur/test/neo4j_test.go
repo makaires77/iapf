@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb"
+	"github.com/makaires77/iapf/backend/graph_pasteur/graphdb"
 	"github.com/stretchr/testify/assert"
 )
 
