@@ -45,7 +45,7 @@ func (n *Neo4j) ExecuteQueryWithRetry(query string, parameters map[string]interf
 }
 
 func (n *Neo4j) ExecuteQuery(query string, parameters map[string]interface{}) (*neo4j.Result, error) {
-	session := n.Driver.NewSession(neo4j.SessionConfig{})
+	session, _ := n.Driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
 	result, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {

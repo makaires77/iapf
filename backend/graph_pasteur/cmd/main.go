@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb/"
+	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb"
 	"github.com/makaires77/iapf/backend/graph_pasteur/pkg"
 )
 
