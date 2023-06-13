@@ -2,88 +2,48 @@ package pkg
 
 import (
 	"fmt"
-	"log"
-	"strings"
+	"net/http"
 
-	"github.com/gocolly/colly"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"golang.org/x/net/html"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb"
 )
 
-func ScrapeWebsiteAndPersistToNeo4j(driver neo4j.Driver) {
-	// Criação do coletor
-	c := colly.NewCollector()
-
-	// Callback para páginas HTML
-	c.OnHTML("html", func(e *colly.HTMLElement) {
-		processNode(driver, e.DOM.Nodes[0], "")
-	})
-
-	// Callback para erros de requisição
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Algo deu errado:", err)
-	})
-
-	// Iniciar o scraping
-	c.Visit("https://www.research.pasteur.fr/en/")
+type Scraper struct {
+	Neo4jClient *graphdb.Neo4j
 }
 
-func processNode(driver neo4j.Driver, n *html.Node, parent string) {
-	switch n.Type {
-	case html.ElementNode:
-		nodeType := n.Data
-		props := make(map[string]interface{})
-		for _, a := range n.Attr {
-			props[a.Key] = a.Val
-		}
-		createNodeInNeo4j(driver, nodeType, props)
-		parent = nodeType
-	case html.TextNode:
-		text := strings.TrimSpace(n.Data)
-		if len(text) > 0 {
-			createNodeInNeo4j(driver, "text", map[string]interface{}{"value": text})
-			createRelationshipInNeo4j(driver, parent, "text")
-		}
-	}
-
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		processNode(driver, c, parent)
+func NewScraper(neo4jClient *graphdb.Neo4j) *Scraper {
+	return &Scraper{
+		Neo4jClient: neo4jClient,
 	}
 }
 
-func createNodeInNeo4j(driver neo4j.Driver, nodeType string, props map[string]interface{}) {
-	session := driver.NewSession(neo4j.SessionConfig{})
-	defer session.Close()
-
-	result, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		return transaction.Run(
-			fmt.Sprintf("CREATE (n:%s $props) RETURN n", nodeType),
-			map[string]interface{}{"props": props},
-		)
-	})
-
+func (s *Scraper) ScrapeWebsite() error {
+	// Realizar o scraping do site
+	res, err := http.Get("http://www.research.pasteur.fr/en/")
 	if err != nil {
-		log.Printf("Failed to create node: %v", err)
-		return
+		return fmt.Errorf("failed to make GET request to website: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	if result.Next() {
-		fmt.Printf("Created node: %v\n", result.Record().GetByIndex(0))
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML: %w", err)
 	}
+
+	// Processar os dados raspados
+	// TODO: Extrair as informações desejadas e criar nós e relacionamentos no Neo4j
+
+	return nil
 }
 
-func createRelationshipInNeo4j(driver neo4j.Driver, from string, to string) {
-	session := driver.NewSession(neo4j.SessionConfig{})
-	defer session.Close()
+func (s *Scraper) PersistDataInNeo4j() error {
+	// TODO: Implementar a lógica para persistir os dados no Neo4j
+	// Utilize s.Neo4jClient para interagir com o banco de dados Neo4j
 
-	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		return transaction.Run(
-			fmt.Sprintf("MATCH (a:%s), (b:%s) WHERE id(a) < id(b) CREATE (a)-[r:RELATED_TO]->(b)", from, to),
-			nil,
-		)
-	})
-
-	if err != nil {
-		log.Printf("Failed to create relationship: %v", err)
-	}
+	return nil
 }
