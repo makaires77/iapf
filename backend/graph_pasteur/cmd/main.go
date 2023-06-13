@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/makaires77/iapf/backend/graphscraperpasteur/internal/graphdb"
-	"github.com/makaires77/iapf/backend/graphscraperpasteur/pkg"
+	"github.com/makaires77/iapf/backend/graph_pasteur/internal/graphdb"
+	"github.com/makaires77/iapf/backend/graph_pasteur/pkg"
 )
 
 func main() {
