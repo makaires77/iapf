@@ -64,7 +64,7 @@ func (db *Neo4jDB) CreateNode(label string, properties map[string]interface{}) (
 }
 
 // CreateRelationship creates a relationship between two nodes with the given relationship type and properties.
-func (db *Neo4jDB) CreateRelationship(startNodeID, endNodeID int64, relType string, properties map[string]interface{}) (int64, error) {
+func (db *Neo4jDB) CreateRelationship(startNodeID int64, endNodeID int64, relType string, properties map[string]interface{}) (int64, error) {
 	session := db.driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 

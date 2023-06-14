@@ -6,6 +6,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/makaires77/iapf/backend/graph_pasteur/graphdb"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 )
 
 type Scraper struct {
@@ -58,14 +59,17 @@ func (s *Scraper) ScrapeWebsite() error {
 		}
 
 		// Criar relacionamento com o nó pai
-		_, err = s.Neo4jClient.CreateRelationship(0, childNodeID, "HAS_CHILD", nil)
+		startNode := dbtype.Node{
+			Id: 0,
+		}
+		_, err = s.Neo4jClient.CreateRelationship(startNode, childNodeID, "HAS_CHILD", nil)
 		if err != nil {
 			fmt.Printf("Failed to create relationship: %v\n", err)
 			return
 		}
 
 		// Recursivamente percorrer os nós filhos dos filhos
-		s.ScrapeChildNode(link.AttrOr("href", ""), childNodeID)
+		s.ScrapeChildNode(link.AttrOr("href", ""), childNodeID.Id)
 	})
 
 	// Processar os dados raspados
@@ -119,7 +123,7 @@ func (s *Scraper) ScrapeChildNode(url string, parentNodeID int64) {
 		}
 
 		// Recursivamente percorrer os nós filhos dos filhos
-		s.ScrapeChildNode(link.AttrOr("href", ""), childNodeID)
+		s.ScrapeChildNode(link.AttrOr("href", ""), childNodeID.Id)
 	})
 }
 
@@ -130,7 +134,7 @@ func (s *Scraper) PersistDataInNeo4j() error {
 	endNodeID := int64(2)
 	relType := "HAS"
 	relProperties := map[string]interface{}{
-		"since": "2022-01-01",
+		"since": "2023-06-14",
 	}
 	_, err := s.Neo4jClient.CreateRelationship(startNodeID, endNodeID, relType, relProperties)
 	if err != nil {
