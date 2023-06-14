@@ -30,7 +30,7 @@ func (s *Scraper) ScrapeWebsite() error {
 		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	_, err = goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return fmt.Errorf("failed to parse HTML: %w", err)
 	}

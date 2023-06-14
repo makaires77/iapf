@@ -49,15 +49,16 @@ func (db *Neo4jDB) CreateNode(label string, properties map[string]interface{}) (
 			return nil, err
 		}
 
-		if summary.Next() {
-			idValue, ok := summary.Record().Get("id(n)")
-			if !ok {
-				return nil, errors.New("Failed to retrieve node ID")
-			}
-			return idValue.(int64), nil
+		record, err := summary.Next()
+		if err != nil {
+			return nil, err
 		}
 
-		return nil, errors.New("No node ID returned")
+		idValue, ok := record.Get("id(n)")
+		if !ok {
+			return nil, errors.New("Failed to retrieve node ID")
+		}
+		return idValue.(int64), nil
 	})
 
 	if err != nil {
@@ -92,15 +93,16 @@ func (db *Neo4jDB) CreateRelationship(startNodeID, endNodeID int64, relType stri
 			return nil, err
 		}
 
-		if summary.Next() {
-			idValue, ok := summary.Record().Get("id(r)")
-			if !ok {
-				return nil, errors.New("Failed to retrieve relationship ID")
-			}
-			return idValue.(int64), nil
+		record, err := summary.Next()
+		if err != nil {
+			return nil, err
 		}
 
-		return nil, errors.New("No relationship ID returned")
+		idValue, ok := record.Get("id(r)")
+		if !ok {
+			return nil, errors.New("Failed to retrieve relationship ID")
+		}
+		return idValue.(int64), nil
 	})
 
 	if err != nil {
