@@ -44,19 +44,14 @@ func (db *Neo4jDB) CreateNode(label string, properties map[string]interface{}) (
 			return nil, err
 		}
 
-		summary, err := result.Consume()
-		if err != nil {
-			return nil, err
-		}
-
-		record, err := summary.Next()
+		record, err := result.Single()
 		if err != nil {
 			return nil, err
 		}
 
 		idValue, ok := record.Get("id(n)")
 		if !ok {
-			return nil, errors.New("Failed to retrieve node ID")
+			return nil, errors.New("failed to retrieve node ID")
 		}
 		return idValue.(int64), nil
 	})
@@ -88,19 +83,14 @@ func (db *Neo4jDB) CreateRelationship(startNodeID, endNodeID int64, relType stri
 			return nil, err
 		}
 
-		summary, err := result.Consume()
-		if err != nil {
-			return nil, err
-		}
-
-		record, err := summary.Next()
+		record, err := result.Single()
 		if err != nil {
 			return nil, err
 		}
 
 		idValue, ok := record.Get("id(r)")
 		if !ok {
-			return nil, errors.New("Failed to retrieve relationship ID")
+			return nil, errors.New("failed to retrieve relationship ID")
 		}
 		return idValue.(int64), nil
 	})
@@ -143,9 +133,10 @@ func (db *Neo4jDB) MatchNodes(label string, properties map[string]interface{}) (
 
 		var nodeIDs []int64
 		for result.Next() {
-			idValue, ok := result.Record().Get("id(n)")
+			record := result.Record()
+			idValue, ok := record.Get("id(n)")
 			if !ok {
-				return nil, errors.New("Failed to retrieve node ID")
+				return nil, errors.New("failed to retrieve node ID")
 			}
 			nodeIDs = append(nodeIDs, idValue.(int64))
 		}
