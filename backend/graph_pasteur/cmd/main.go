@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/makaires77/iapf/backend/graph_pasteur/graphdb"
@@ -9,47 +8,32 @@ import (
 )
 
 func main() {
-	// Configurações do Neo4j
-	neo4jURI := "bolt://localhost:7687"
-	neo4jUsername := "neo4j"
-	neo4jPassword := "password"
+	// Configuração do Neo4j
+	uri := "bolt://localhost:7687"
+	username := "neo4j"
+	password := "password"
 
-	// Inicialização do cliente Neo4j
-	neo4jClient, err := graphdb.NewNeo4j(neo4jURI, neo4jUsername, neo4jPassword)
+	// Inicializar o cliente do Neo4j
+	neo4jClient, err := graphdb.NewNeo4j(uri, username, password)
 	if err != nil {
-		log.Fatalf("Failed to initialize Neo4j: %v", err)
+		log.Fatalf("Failed to create Neo4j client: %v", err)
 	}
-
 	defer neo4jClient.Close()
 
-	// Executa o scraping do site e persiste os dados no Neo4j
-	err = scrapeAndPersistData(neo4jClient)
+	// Inicializar o scraper
+	scraper := pkg.NewScraper(neo4jClient)
+
+	// Testar o scraping do website
+	err = scraper.ScrapeWebsite()
 	if err != nil {
-		log.Fatalf("Failed to scrape and persist data: %v", err)
+		log.Fatalf("Failed to scrape website: %v", err)
 	}
 
-	log.Println("Scraping and data persistence completed successfully!")
-}
-
-func scrapeAndPersistData(neo4jClient *graphdb.Neo4j) error {
-	// Realiza o scraping do site
-	scrapedData, err := pkg.ScrapeWebsite()
+	// Testar a persistência dos dados no Neo4j
+	err = scraper.PersistDataInNeo4j()
 	if err != nil {
-		return fmt.Errorf("failed to scrape website: %w", err)
+		log.Fatalf("Failed to persist data in Neo4j: %v", err)
 	}
 
-	// Itera sobre os dados raspados e persiste no Neo4j
-	for _, data := range scrapedData {
-		nodeProps := map[string]interface{}{
-			"title": data.Title,
-			"url":   data.URL,
-		}
-
-		_, err := neo4jClient.CreateNode("NodeLabel", nodeProps)
-		if err != nil {
-			return fmt.Errorf("failed to create node in Neo4j: %w", err)
-		}
-	}
-
-	return nil
+	log.Println("Scraping and data persistence completed successfully.")
 }
