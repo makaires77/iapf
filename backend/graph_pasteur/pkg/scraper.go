@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/marcosblandim/iapf/backend/graph_pasteur/graphdb"
+	"github.com/makaires77/iapf/backend/graph_pasteur/graphdb"
 )
 
 type Scraper struct {
-	Neo4jClient *graphdb.Neo4jDB
+	Neo4jClient *graphdb.Neo4j
 }
 
-func NewScraper(neo4jClient *graphdb.Neo4jDB) *Scraper {
+func NewScraper(neo4jClient *graphdb.Neo4j) *Scraper {
 	return &Scraper{
 		Neo4jClient: neo4jClient,
 	}
@@ -94,17 +94,17 @@ func (s *Scraper) ScrapeChildNode(url string, parentNodeID int64) {
 		return
 	}
 
-	// Extrair os nós filhos do nó filho
-	childNodeInfos := doc.Find(".child-node-selector")
-	childNodeInfos.Each(func(i int, childNodeInfo *goquery.Selection) {
-		// Extrair os dados do nó filho
-		childCount := childNodeInfo.Find(".child-count-selector").Text()
-		childText := childNodeInfo.Find(".child-text-selector").Text()
-		fmt.Printf("Child Node %d: Count=%s, Text=%s\n", i+1, childCount, childText)
+	// Extrair os nós do nó filho
+	childNodes := doc.Find(".child-node")
+	childNodes.Each(func(i int, childNode *goquery.Selection) {
+		link := childNode.Find("a")
+		count := link.Find("div.count").Text()
+		text := link.Find("div.text").Text()
+		fmt.Printf("Child Node %d: Count=%s, Text=%s\n", i+1, count, text)
 
 		// Criar o nó filho e relacionamento no Neo4j
-		childNodeID, err := s.Neo4jClient.CreateNode(childText, map[string]interface{}{
-			"count": childCount,
+		childNodeID, err := s.Neo4jClient.CreateNode(text, map[string]interface{}{
+			"count": count,
 		})
 		if err != nil {
 			fmt.Printf("Failed to create child node: %v\n", err)
@@ -119,7 +119,7 @@ func (s *Scraper) ScrapeChildNode(url string, parentNodeID int64) {
 		}
 
 		// Recursivamente percorrer os nós filhos dos filhos
-		s.ScrapeChildNode("", childNodeID)
+		s.ScrapeChildNode(link.AttrOr("href", ""), childNodeID)
 	})
 }
 
