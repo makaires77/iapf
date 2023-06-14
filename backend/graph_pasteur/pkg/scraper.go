@@ -128,7 +128,7 @@ func (s *Scraper) PersistDataInNeo4j() error {
 	// Utilize s.Neo4jClient para interagir com o banco de dados Neo4j
 	startNodeID := int64(1)
 	endNodeID := int64(2)
-	relType := "KNOWS"
+	relType := "HAS"
 	relProperties := map[string]interface{}{
 		"since": "2022-01-01",
 	}
